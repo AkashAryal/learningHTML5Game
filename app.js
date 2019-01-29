@@ -1,59 +1,114 @@
+require('dotenv').config()
+
+const mongojs = require('mongojs');
+const db_name = "myGame"
+const db_conn = "localhost:27017/"+db_name; 
+const db = mongojs(db_conn,['account','progress'])
+
 const express = require('express')
 const app = express()
 const serv = require('http').Server(app);
 const Player = require('./server/Player.js');
+const Bullet = require('./server/Bullet.js');
 app.get('/', (req, res) => res.sendFile(__dirname + '/client/index.html'))
 app.use('/client', express.static(__dirname + '/client'))
 serv.listen(2000);
 
 var SOCKET_LIST = {};
-//var PLAYER_LIST={};
+var USERS = {
+  //username:password
+  "bob": "asd",
+  "bob2": "bob",
+  "bob3": "ttt",
+}
 
-var io = require('socket.io')(serv,{});
+var isValidPassword = function (data, cb) {
+  db.account.find({username:data.username, password:data.password},(err,res)=>{
+    if(res.length>0)
+      cb(true);
+    else
+      cb(false);
+  })
+}
+
+var isUsernameTaken = function (data, cb) {
+  db.account.find({username: data.username}, (err, res) => {
+    if (res.length > 0)
+      cb(true);
+    else
+      cb(false);
+  })
+}
+var addUser = function (data, cb) {
+  db.account.insert({ username: data.username, password: data.password }, (err, res) => {
+    cb();
+  })
+}
+var io = require('socket.io')(serv, {});
 //this initializes connection and recieves client data
 //RECIEVES FROM CLIENT
-io.sockets.on('connection', function (socket){
-  socket.id=Math.random();
-  SOCKET_LIST[socket.id]=socket;
-  //var player = new Player(socket.id);
-  //PLAYER_LIST[socket.id]=player;
-  Player.onConnect(socket);
+io.sockets.on('connection', function (socket) {
+  socket.id = Math.random();
+  SOCKET_LIST[socket.id] = socket;
 
-  socket.on('disconnect',()=>{
+  socket.on('signIn', (data) => {
+    isValidPassword(data,(res)=>{
+      if(res){
+        Player.onConnect(socket); //includes onKeyPress
+        socket.emit('signInResponse', { success: true })
+      }else{
+        socket.emit('signInResponse', { success: false })
+      }
+    });
+  });
+
+  socket.on('signUp', (data)=>{
+    isUsernameTaken(data, (res)=>{
+      if(res){
+        socket.emit('signUpResponse', { success: false })
+      }else{
+        addUser(data,()=>{
+          socket.emit('signUpResponse', { success: true });
+        });
+      }
+    });
+  });
+  socket.on('disconnect', () => {
     delete SOCKET_LIST[socket.id];
     //delete PLAYER_LIST[socket.id];
     Player.onDisconnect(socket);
-    
+
   });
 
-  /*socket.on('keyPress',(data)=>{ //change class var of Person to say button has been pressed
-    if(data.inputID==='left')
-      player.setPressingLeft(data.state);
-    if(data.inputID==='right')
-      player.setPressingRight(data.state)
-    if(data.inputID==='up')
-      player.setPressingUp(data.state);
-    if(data.inputID==='down')
-      player.setPressingDown(data.state);
-  });*/
+  socket.on('sendMsgToServer', (data) => {
+    var playerName = ("" + socket.id).slice(2, 7);
+    for (var i in SOCKET_LIST) {
+      SOCKET_LIST[i].emit('addToChat', playerName + ': ' + data) //emit data to every connection
+    }
+  })
+
+  socket.on('evalServer', (data) => {
+
+    if (process.env.DEBUG == "true") {
+      var res = eval(data)
+      socket.emit('evalAnswer', res)
+    } else {
+      socket.emit('evalAnswer', data)
+    }
+  });
+
 });
 
 //this loop does all of the updating and communicating with client.
 //COMMUNICATES WITH CLIENT
-setInterval( ()=>{
-  var pack =Player.update();
-  /* var pack =[];
-  for(var i in PLAYER_LIST){ //for each connection
-    var player =  PLAYER_LIST[i];
-    player.updatePosition();
-    pack.push( //push data to pack arr
-      player
-    );
-  } */
-  for (var i in SOCKET_LIST) { //emit players info
-    var socket =  SOCKET_LIST[i];
-    //console.log(pack);
-    
-    socket.emit('newPosition',pack); //send pack data to client
+setInterval(() => {
+  var pack = {
+    player: Player.update(),
+    bullet: Bullet.update(),
   }
-},1000/25);
+  // var pack =Player.update();
+  for (var i in SOCKET_LIST) { //emit players info
+    var socket = SOCKET_LIST[i];
+    socket.emit('newPosition', pack); //send pack data to client
+  }
+}, 1000 / 25);

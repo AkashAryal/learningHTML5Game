@@ -10,7 +10,11 @@ module.exports = class Entity{
      this.spdY=0;
      this.id="";
     }
-
+    
+    /**
+     * calls method to update position
+     *
+     */
     update(){
         this.updatePosition();
     }
@@ -18,6 +22,10 @@ module.exports = class Entity{
     updatePosition(){
         this.x+=this.spdX;
         this.y+=this.spdY;
+    }
+
+    getDistance(point){
+        return Math.sqrt(Math.pow(this.x-point.x,2) + Math.pow(this.y-point.y,2))
     }
 }
 

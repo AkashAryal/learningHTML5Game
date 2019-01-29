@@ -1,12 +1,10 @@
 'use strict';
 const Entity = require('./Entity');
+const Bullet = require('./Bullet');
 
 class Player extends Entity {
   constructor(id) {
-    /*this.x = 250;
-    this.y = 250;
-    */
-   super();
+    super();
     this.id = id;
     
     this.number = "" + Math.floor(10 * Math.random());
@@ -15,19 +13,11 @@ class Player extends Entity {
     this.pressingLeft = false;
     this.pressingRight = false;
     this.maxSpd = 10;
+    this.pressingAttack=false;
+    this.mouseAngle=0;
     Player.list[this.id]=this;
   }
 
-  /*updatePosition() {
-    if (this.pressingDown)
-      this.y += this.maxSpd;
-    if (this.pressingUp)
-      this.y -= this.maxSpd;
-    if (this.pressingLeft)
-      this.x -= this.maxSpd;
-    if (this.pressingRight)
-      this.x += this.maxSpd;
-  }*/
   static onConnect(socket){
     var player = new Player(socket.id);
     socket.on('keyPress', (data) => { //change class var of Person to say button has been pressed
@@ -39,7 +29,16 @@ class Player extends Entity {
         player.setPressingUp(data.state);
       if (data.inputID === 'down')
         player.setPressingDown(data.state);
+      if (data.inputID === 'attack'){
+        player.setPressingAttack(data.state);
+        }
+      if (data.inputID === 'mouseAngle')
+        player.setMouseAngle(data.state);
     });
+  }
+
+  static getList(){
+    return Player.list;
   }
 
   static onDisconnect(socket){
@@ -73,9 +72,28 @@ class Player extends Entity {
       this.spdX=0;
   }
 
+  shootBullet(angle) {
+    var bullet = new Bullet(angle,this.id)
+    bullet.x = this.x;
+    bullet.y = this.y;
+  }
+  /**
+   * Calls update() and Entity's update()
+   * 
+   * @param none
+   */
   update(){
     this.updateSpd();
     super.update();
+
+    if(this.pressingAttack){
+      this.shootBullet(this.mouseAngle);
+    }
+
+  }
+
+  getId(){
+    return this.id;
   }
 
   setPressingDown(boolean) {
@@ -90,30 +108,11 @@ class Player extends Entity {
   setPressingLeft(boolean) {
     this.pressingLeft = boolean;
   }
-
-  getPressingLeft() {
-    return this.pressingLeft;
+  setPressingAttack(boolean) {
+    this.pressingAttack = boolean;
   }
-  getPressingRight() {
-    return this.pressingRight;
-  }
-  getPressingUp() {
-    return this.pressingUp;
-  }
-  getPressingDown() {
-    return this.pressingDown;
-  }
-  getNumber() {
-    return this.number;
-  }
-  getMaxSpd() {
-    return this.maxSpd;
-  }
-  getX() {
-    return this.x;
-  }
-  getY() {
-    return this.y;
+  setMouseAngle(angle) {
+    this.mouseAngle = angle;
   }
 }
 Player.list = {};
