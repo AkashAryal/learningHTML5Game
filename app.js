@@ -25,7 +25,7 @@ var USERS = {
 var initPack = { player: [], bullet: [] }
 var removePack = { player: [], bullet: [] }
 
-var tP = new Player(12132213);
+var tP = new Player(12132213,initPack,removePack);
 
 var isValidPassword = function (data, cb) {
   db.account.find({username:data.username, password:data.password},(err,res)=>{
@@ -59,7 +59,7 @@ io.sockets.on('connection', function (socket) {
   socket.on('signIn', (data) => {
     isValidPassword(data,(res)=>{
       if(res){
-        Player.onConnect(socket); //includes onKeyPress
+        Player.onConnect(socket, initPack, removePack); //includes onKeyPress
         socket.emit('signInResponse', { success: true })
       }else{
         socket.emit('signInResponse', { success: false })

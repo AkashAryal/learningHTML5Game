@@ -3,7 +3,7 @@ const Entity = require('./Entity');
 const Bullet = require('./Bullet');
 
 class Player extends Entity {
-  constructor(id) {
+  constructor(id, initPack, removePack) {
     super();
     this.id = id;
     
@@ -16,15 +16,12 @@ class Player extends Entity {
     this.pressingAttack=false;
     this.mouseAngle=0;
     Player.list[this.id]=this;
-    initPack.Player.push({
-      id:this.id,
-      x:this.x,
-      y:this.y
-    });
+    initPack.player.push(this);
+    this.removePack=removePack;
   }
 
-  static onConnect(socket){
-    var player = new Player(socket.id);
+  static onConnect(socket, initPack, removePack){
+    var player = new Player(socket.id,initPack, removePack);
     socket.on('keyPress', (data) => { //change class var of Person to say button has been pressed
       if (data.inputID === 'left')
         player.setPressingLeft(data.state);
@@ -48,6 +45,7 @@ class Player extends Entity {
 
   static onDisconnect(socket){
     delete Player.list[socket.id];
+    this.removePack.player.push(this);
   }
 
   static update(){

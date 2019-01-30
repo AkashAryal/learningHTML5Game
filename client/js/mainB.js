@@ -114,10 +114,10 @@ socket.on('update',(data)=>{
 //remove -> sends id of thigs to remove
 socket.on('remove',(data)=>{
     for (var i = 0; i < data.player.length; i++) {
-        delete Player_c.list[data.player[i]];
+        delete Player_c.list[data.player[i].id];
     }
     for (var i = 0; i < data.bullet.length; i++) {
-        delete Bullet_c.list[data.bullet[i]];
+        delete Bullet_c.list[data.bullet[i].id];
     }
 })
 

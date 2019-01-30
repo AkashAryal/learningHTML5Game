@@ -5,7 +5,7 @@ const Entity = require('./Entity');
 class Bullet extends Entity {
 
             //in rads?, id of parent
-    constructor(angle, parent) {
+    constructor(angle, parent, initPack, removePack) {
         super();
         this.id = Math.random();
         this.spdX = Math.cos(angle / 180 * Math.PI) * 10
@@ -14,6 +14,11 @@ class Bullet extends Entity {
         this.toRemove = false;
         this.parent=parent;
         Bullet.list[this.id] = this;
+        initPack.Player.push({
+            id: this.id,
+            x: this.x,
+            y: this.y
+        });
     }
 
     //main update
@@ -35,14 +40,15 @@ class Bullet extends Entity {
 
     static update() {
         var pack = [];
-        for (var i in Bullet.list) { //for each connection
+        for (var i in Bullet.list) { //f     id: this.idor each connection
             var bullet = Bullet.list[i];
             bullet.update();
-            if(bullet.toRemove==true)
+            if(bullet.toRemove==true){
                 delete Bullet.list[bullet.id]   
-            pack.push( //push data to pack arr
+                removePack.bullet.push(this);
+             }else{ pack.push( //push data to pack arr
                 bullet
-            );
+            )}
         }
         return pack;
     }
