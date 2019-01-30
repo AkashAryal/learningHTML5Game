@@ -1,7 +1,6 @@
-class Bullet_c extends Entity {
+class Bullet_c{
     constructor(initPack) {
         this.id = initPack.id;
-        this.number = initPack.number;
         this.x = initPack.x
         this.y = initPack.y
         Bullet_c.list[this.id] = this;

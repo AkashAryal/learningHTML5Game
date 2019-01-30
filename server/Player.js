@@ -16,6 +16,11 @@ class Player extends Entity {
     this.pressingAttack=false;
     this.mouseAngle=0;
     Player.list[this.id]=this;
+    initPack.Player.push({
+      id:this.id,
+      x:this.x,
+      y:this.y
+    });
   }
 
   static onConnect(socket){
@@ -56,6 +61,9 @@ class Player extends Entity {
     } 
       return pack;
   }
+  /**
+   * updates x and y speds
+   */
   updateSpd(){
     if (this.pressingDown)
       this.spdY = this.maxSpd;

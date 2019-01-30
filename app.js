@@ -10,6 +10,7 @@ const app = express()
 const serv = require('http').Server(app);
 const Player = require('./server/Player.js');
 const Bullet = require('./server/Bullet.js');
+require('./server/GodClass.js')();
 app.get('/', (req, res) => res.sendFile(__dirname + '/client/index.html'))
 app.use('/client', express.static(__dirname + '/client'))
 serv.listen(2000);
@@ -21,6 +22,10 @@ var USERS = {
   "bob2": "bob",
   "bob3": "ttt",
 }
+var initPack = { player: [], bullet: [] }
+var removePack = { player: [], bullet: [] }
+
+var tP = new Player(12132213);
 
 var isValidPassword = function (data, cb) {
   db.account.find({username:data.username, password:data.password},(err,res)=>{
@@ -109,6 +114,9 @@ setInterval(() => {
   // var pack =Player.update();
   for (var i in SOCKET_LIST) { //emit players info
     var socket = SOCKET_LIST[i];
-    socket.emit('newPosition', pack); //send pack data to client
+    socket.emit('update', pack); //send pack data to client
+    socket.emit('init',initPack)
+    socket.emit('remove',removePack)
   }
+  clearPacks([initPack,removePack]);
 }, 1000 / 25);

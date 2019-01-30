@@ -2,7 +2,10 @@
     Basic stuff every "thing" in a ga,e has
 */
 module.exports = class Entity{
-
+    
+    /**
+     * x,y,spdX,spdY,id
+     */
     constructor(){
      this.x = 250;
      this.y=250;
